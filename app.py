@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-AUTHORIZED_NUMBER = "+12362055011"   # replace with your SMS sender number
+AUTHORIZED_NUMBER = "+12362055011"   # your SMS sender number
 latest_sms = None
 
 @app.route('/sms', methods=['POST'])
@@ -23,5 +23,3 @@ def get_latest():
     if latest_sms is None:
         return jsonify({"data": []})
     return jsonify({"data": [latest_sms]})
-
-app.run(host="0.0.0.0", port=5000)
