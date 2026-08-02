@@ -15,24 +15,26 @@ def sms():
 
     # Forward SMS sends:
     # {
-    #   "sender": "+12362055011",
-    #   "message": "Your Student Success Portal MFA Verification Code is: 997901",
+    #   "sender": "AOL1 (+12362055011)",
+    #   "message": "Your Student Success Portal MFA Verification Code is: 179665",
     #   "timestamp": "2026-08-01 23:44:00"
     # }
 
     sender = data.get("sender", "").strip()
     message = data.get("message", "").strip()
 
-    # Check if message contains a 6‑digit OTP
+    # Extract OTP from message
     otp_match = re.search(OTP_REGEX, message)
     if not otp_match:
         return {"status": "ignored"}, 403
+
+    otp = otp_match.group(0)
 
     # Store clean SMS
     latest_sms = {
         "from": sender,
         "message": message,
-        "otp": otp_match.group(0)
+        "otp": otp
     }
 
     print("Latest SMS:", latest_sms)
