@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
+import re
 
 app = Flask(__name__)
 
-# Your real phone number (the one that sends OTP)
-AUTHORIZED_NUMBER = "\b\d{6}\b"
+# Regex to detect 6‑digit OTP
+OTP_REGEX = r"\b\d{6}\b"
 
 latest_sms = None
 
@@ -12,27 +13,30 @@ def sms():
     global latest_sms
     data = request.json
 
-    # The SMS Forwarder app sends ONLY:
-    # { "message": "From: SENDER\nMESSAGE" }
-    raw = data.get("message", "")
-    lines = raw.split("\n")
+    # Forward SMS sends:
+    # {
+    #   "sender": "+12362055011",
+    #   "message": "Your Student Success Portal MFA Verification Code is: 997901",
+    #   "timestamp": "2026-08-01 23:44:00"
+    # }
 
-    # Extract sender and message
-    sender_line = lines[0].replace("From:", "").strip()
-    msg_line = "\n".join(lines[1:]).strip()
+    sender = data.get("sender", "").strip()
+    message = data.get("message", "").strip()
 
-    # Authorization check
-    if sender_line != AUTHORIZED_NUMBER:
+    # Check if message contains a 6‑digit OTP
+    otp_match = re.search(OTP_REGEX, message)
+    if not otp_match:
         return {"status": "ignored"}, 403
 
     # Store clean SMS
     latest_sms = {
-        "from": sender_line,
-        "message": msg_line
+        "from": sender,
+        "message": message,
+        "otp": otp_match.group(0)
     }
 
     print("Latest SMS:", latest_sms)
-    return {"status": "ok"}
+    return {"status": "ok"}, 200
 
 
 @app.route('/requests', methods=['GET'])
