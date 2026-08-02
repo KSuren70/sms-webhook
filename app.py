@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Your real phone number (the one that sends OTP)
-AUTHORIZED_NUMBER = "AOL"
+AUTHORIZED_NUMBER = "+12362055011"
 
 latest_sms = None
 
