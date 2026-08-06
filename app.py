@@ -11,27 +11,19 @@ latest_sms = None
 
 
 # ---------------------------------------------------------
-# RECEIVE SMS FROM SMS FORWARDER (POST)
+# 1. POST /sms  (Your old Postman tests)
 # ---------------------------------------------------------
-@app.route("/requests", methods=["POST"])
-def receive_sms():
+@app.route("/sms", methods=["POST"])
+def sms_post():
     global latest_sms
 
-    # Try to parse JSON safely
     data = request.get_json(silent=True)
-
     if not data:
-        # SMS Forwarder sometimes sends empty body → avoid crash
-        print("Empty or invalid JSON received:", request.data)
         return jsonify({"error": "No JSON received"}), 400
 
-    # SMS Forwarder sends only:
-    # { "subject": "...", "message": "FULL_SMS_TEXT" }
     sms_text = data.get("message", "")
-
     latest_sms = sms_text
 
-    # Extract OTP
     match = re.search(OTP_REGEX, sms_text)
     otp = match.group(0) if match else None
 
@@ -43,7 +35,33 @@ def receive_sms():
 
 
 # ---------------------------------------------------------
-# READ LATEST SMS FOR SELENIUM (GET)
+# 2. POST /requests  (SMS Forwarder app)
+# ---------------------------------------------------------
+@app.route("/requests", methods=["POST"])
+def receive_sms():
+    global latest_sms
+
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "No JSON received"}), 400
+
+    # SMS Forwarder sends only:
+    # { "subject": "...", "message": "{sms}" }
+    sms_text = data.get("message", "")
+    latest_sms = sms_text
+
+    match = re.search(OTP_REGEX, sms_text)
+    otp = match.group(0) if match else None
+
+    return jsonify({
+        "status": "ok",
+        "otp": otp,
+        "message": sms_text
+    })
+
+
+# ---------------------------------------------------------
+# 3. GET /requests  (Selenium OTP reader)
 # ---------------------------------------------------------
 @app.route("/requests", methods=["GET"])
 def get_latest_sms():
