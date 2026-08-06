@@ -4,18 +4,18 @@ import re
 app = Flask(__name__)
 
 OTP_REGEX = r"\b\d{6}\b"
-
 latest_sms = None
 
 @app.route("/sms", methods=["POST"])
 def receive_sms():
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
-    # Your SMS Forwarder app sends only:
-    # { "subject": "...", "message": "full SMS text" }
+    if not data:
+        print("RAW DATA:", request.data)
+        return jsonify({"error": "No JSON received"}), 400
+
     sms_text = data.get("message", "")
 
-    # Extract OTP
     match = re.search(OTP_REGEX, sms_text)
     otp = match.group(0) if match else None
 
