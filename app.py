@@ -6,7 +6,7 @@ app = Flask(__name__)
 OTP_REGEX = r"\b\d{6}\b"
 latest_sms = None
 
-@app.route("/sms", methods=["POST"])
+@app.route("/requests", methods=["POST"])
 def receive_sms():
     data = request.get_json(silent=True)
 
@@ -19,11 +19,8 @@ def receive_sms():
     match = re.search(OTP_REGEX, sms_text)
     otp = match.group(0) if match else None
 
-    global latest_sms
-    latest_sms = sms_text
-
     return jsonify({
         "status": "ok",
         "otp": otp,
-        "raw": sms_text
+        "message": sms_text
     })
